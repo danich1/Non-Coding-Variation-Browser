@@ -1,0 +1,58 @@
+{% extends "nc_snp/base_header.html" %}
+{% load staticfiles %}
+{% block headlink %}
+    <link href = "{% static 'nc_snp/css/welcome_screen.css'  %}" rel="stylesheet">
+    <script src="{% static 'nc_snp/js/welcome_screen.js' %}"></script>
+    <title>Welcome to NCVB</title>
+{% endblock %}
+{% block body_content %}
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-lg-12">
+                <table class="table table-striped" id="regions">
+                    <thead>
+                        <tr>
+                            <th>Chromosome</th>
+                            <th>Start</th>
+                            <th>End</th>
+                            <th>Trait</th>
+                        </tr>
+                    </thead>
+                    <tbody id="test">
+                        <tr>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-lg-12">
+                <select id="chr_list">
+                </select>
+                <label for="start">Begin Region: </label>
+                <input type="text" id="start" readOnly class="window_label" />
+                <label for="end">End Region: </label>
+                <input type="text" id="end" readOnly class="window_label" />
+                <select id="trait_list">
+                </select>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-lg-12">
+                <div id="slider"></div>
+            </div>
+
+        </div>
+        <div class="row">
+          <div class="col-lg-4">
+                <button class="btn btn-primary" onclick="add()">Add</button>
+                <button class="btn btn-primary" onclick="submit()"> Submit </button>
+            </div>
+        </div>
+    </div>
+    <form action="browse" method="post" id="region_submit">
+        {% csrf_token %}
+        <input type="hidden" value="" name="region_selected" id="region_input" />
+        <input type="hidden" value="" name="pheno_id" id="pheno_id" />
+    </form>
+{% endblock %}

@@ -1,0 +1,28 @@
+{% load staticfiles %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+    <script src="https://code.jquery.com/ui/1.11.4/jquery-ui.min.js"></script>
+    <script src="{% static 'bootstrap/js/bootstrap.min.js' %}"></script>
+    <link href = "{% static 'bootstrap/css/bootstrap.min.css'  %}" rel="stylesheet">
+    <link rel="stylesheet" href="//code.jquery.com/ui/1.11.4/themes/smoothness/jquery-ui.css">
+    <link href = "{% static 'nc_snp/css/base.css'  %}" rel="stylesheet">
+    {% block headlink %}
+    {% endblock %}
+</head>
+<body>
+<nav class="navbar-wrapper navbar-default" role="navigation">
+    <div class="container-fluid">
+        <div class="navbar-header">
+            <a class="navbar-brand" href="{% url 'start' %}"><div id="title">NCVB</div></a>
+        </div>
+    </div>
+</nav>
+<noscript><h3 class="alert alert-danger">You have javascript disabled. Please enable javascript to continue!</h3></noscript>
+{% block body_content %}
+<p>This is the base html please change me.</p>
+{% endblock %}
+</body>
+</html>

@@ -1,0 +1,107 @@
+#SNP_Browser{
+    height: 150px;
+}
+#CHIP_SEQ_Browser
+{
+    height: 600px !important;
+    width: 800px !important;
+    overflow: scroll;
+}
+#Chip_Peaks .panel-body {
+        cursor: move;
+}
+.tipsy-inner
+{
+    padding: 10px;
+    width: 90px !important;
+    max-width: 200px;
+    color: #303030;
+    background-color: #f5f5b5;
+    border: 1px solid #deca7e;
+}
+.panel-default > .panel-heading
+{
+    background-color:#112a96;
+    color:white;
+}
+.connectedList
+{
+    min-height: 100px;
+    max-height: 300px;
+    overflow: scroll;
+}
+
+.ui-state-default
+{
+    width: 250px;
+}
+#sidebar_region>.btn
+{
+    width:250px;
+}
+.btn-function
+{
+    color:#FFFFFF;
+    border-color:#112a96;
+    background-color:#112a96;
+}
+.btn-loading
+{
+    color:#FFFFFF;
+    background-color:#f0ad4e;
+    border-color:#f0ad4e;
+}
+.btn-active
+{
+    color:#FFFFFF;
+    background-color:pink;
+    border-color:pink;
+}
+.btn-ready
+{
+    color:#FFFFFF;
+    background-color:green;
+    border-color:green;
+}
+
+.sidebars > .sidebar {
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.64);
+    color: white;
+    padding: 30px;
+    font-size: 2em;
+    text-align: center;
+}
+
+.glyphicon-refresh-animate {
+    animation: spin 1s infinite linear;
+    -webkit-animation: spin2 1s infinite linear;
+}
+@-webkit-keyframes spin2 {
+    from { -webkit-transform: rotate(0deg);}
+    to { -webkit-transform: rotate(360deg);}
+}
+
+@keyframes spin {
+    from { transform: scale(1) rotate(0deg);}
+    to { transform: scale(1) rotate(360deg);}
+}
+a
+{
+    color:#FFFFFF;
+}
+.track-merge
+{
+    white-space: nowrap;
+    width: 270px;
+    margin-top: 18px;
+    margin-bottom: 18px;
+}
+.merged
+{
+   white-space: normal !important;
+}
+#plot_legend
+{
+    height:150px;
+    overflow:scroll;
+}

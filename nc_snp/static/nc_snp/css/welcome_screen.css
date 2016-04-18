@@ -1,0 +1,28 @@
+textarea.reporter
+{
+    resize:none;
+}
+#slider
+{
+margin-left 10px;
+width: 1000px;
+}
+.window_label
+{
+    border:0;
+    font-weight: bold;
+    color:blue;
+}
+#regions
+{
+width:800px;
+}
+.row
+{
+    padding-bottom:10px;
+    padding-top:10px;
+}
+thead>tr>th
+{
+    width:200px;
+}
