@@ -1,18 +1,15 @@
 import time
-import tqdm
 import argparse
 import pandas as pd
 import math
 import os
 import sqlite3
 import re
-import struct
 import gzip
 
 parser = argparse.ArgumentParser(prog="CHIP Database Inserter",description="This is a database inserter that takes chip signals/snp information and converts them into json format.")
-parser.add_argument("-r","--regions", nargs="*", metavar=("<start>","<end>"))
 parser.add_argument("-tr", "--track_info", help="Use this to insert track access information",nargs=1,metavar=("Track Metadata File"))
-parser.add_argument("-cp","--chip_peak", help="Use this to parse the track file",nargs=1,metavar=("<Track File>"))
+parser.add_argument("-cp","--chip_peak", help="Use this to parse the track file",nargs='+',metavar=("<Track File>"))
 parser.add_argument("-s", "--snp", help="Use this to parse snp_location files", nargs=2, metavar=("SNP_File","Trait"))
 parser.add_argument("-d", "--ld", help="Use this to parse LD files", nargs=2, metavar=("LD_File","Population"))
 parser.add_argument("-c", "--chr", help="Use this to specify a specific chromosome (chr# or chrX or chrY) if -cp or --chip_peak is not used", nargs=1, metavar=("chromosome"))
@@ -20,7 +17,6 @@ args = parser.parse_args()
 
 #set up the database connection
 conn = sqlite3.connect("db.sqlite3")
-chr = None
 if args.track_info:
     query = conn.cursor()
     tracker = pd.read_csv(args.track_info[0])
@@ -36,32 +32,22 @@ if args.chip_peak:
     start = time.time()
     query.execute("SELECT Max(id) FROM nc_snp_chip_seq")
     result = query.fetchall()[0]
-    with gzip.open(args.chip_peak[0],"rb") as f:
-        counter = result[0]+1 if len(result) > 0 else 1
-        chrom = struct.unpack(">b",f.read(1))[0]
-        start = struct.unpack(">I", f.read(4))[0]
-        end = struct.unpack(">I", f.read(4))[0]
-        while True:
-            accession = f.read(11)
-            print accession
-            if accession == '':
-                break
-            length = struct.unpack(">Q", f.read(8))[0]
-            for i in tqdm.tqdm(range(length)):
-                file_start = struct.unpack(">I",f.read(4))[0]
-                file_end = struct.unpack(">I",f.read(4))[0]
-                file_value = struct.unpack(">H",f.read(2))[0]
-                if file_start >= int(args.regions[0]) or file_end >= int(args.regions[1]):
-                    if file_start <= int(args.regions[1]) or file_end <= int(args.regions[2]):
-                        print "INSERT INTO nc_snp_chip_seq (id,chr,start,end,peak,label_id) VALUES ('%d','%s','%d','%d','%f','%s')" % (counter,"chr"+str(chrom),file_start,file_end,file_value,accession)
-                        counter = counter + 1
+    for seq_file in args.chip_peak:
+        with gzip.open(seq_file,"r") as f:
+            for line in f:
+                counter = result[0]+1 if len(result) > 0 else 1
+                data = line.split("\t")
+                chrom = data[0]
+                seq_start = data[1]
+                seq_end = data[2]
+                seq_value = data[3]
+                print "INSERT INTO nc_snp_chip_seq (id,chr,start,end,peak,label_id) VALUES ('%d','%s','%d','%d','%f','%s')" % (counter,chrom,int(seq_start),int(seq_end),float(seq_value),os.path.splitext(seq_file.split("/")[-1])[0])
+                counter = counter + 1
     end = time.time()
     print "Time Taken: %fs" % (end-start)
     query.close()
 
 if  args.snp:
-    if not(chr):
-        raise Exception("Please use --chr or -c flag to specific chromosome")
     snp_dict = {}
     query = conn.cursor()
     #update this for each snp file
@@ -73,9 +59,15 @@ if  args.snp:
     with open(args.snp[0],"r") as f:
         row_id = result[0] if len(result) > 0 else 1
         f.readline()
-        for line in tqdm.tqdm(f):
+        for line in f:
             data = re.split(r"[\s]+",line.strip())
-            if data[header_label["chromosome"]] == args.chr:
+            if args.chr:
+                if data[header_label["chromosome"]] == args.chr:
+                    snp_dict[data[header_label["position"]]] = snp_dict[data[header_label["rs_number"]]]
+                    query.execute("INSERT OR IGNORE INTO nc_snp_snp (chrom,rs_id,postion) VALUES ('%s','%s','%d')" % (data[header_label["chromosome"]],data[header_label["rs_number"]],data[header_label["position"]]))
+                    query.execute("INSERT OR IGNORE INTO nc_snp_phenotypemap (id,p_val,log_score,phenotype_id,snp_id) VALUES('%d','%.4g','%f','%s','%s') " % (row_id,data[header_label["pvalue"]],math.log10(data[header_label["pvalue"]]),args.snp[1],data[header_label["rs_number"]]))
+                    row_id = row_id + 1
+            else:
                 snp_dict[data[header_label["position"]]] = snp_dict[data[header_label["rs_number"]]]
                 query.execute("INSERT OR IGNORE INTO nc_snp_snp (chrom,rs_id,postion) VALUES ('%s','%s','%d')" % (data[header_label["chromosome"]],data[header_label["rs_number"]],data[header_label["position"]]))
                 query.execute("INSERT OR IGNORE INTO nc_snp_phenotypemap (id,p_val,log_score,phenotype_id,snp_id) VALUES('%d','%.4g','%f','%s','%s') " % (row_id,data[header_label["pvalue"]],math.log10(data[header_label["pvalue"]]),args.snp[1],data[header_label["rs_number"]]))
