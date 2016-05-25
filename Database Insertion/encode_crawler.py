@@ -31,19 +31,28 @@ def chunk_read(response, file_obj, chunk_size=8192, report_hook=None):
 
       file_obj.write(chunk)
 
-
+base_file_path = "/Users/Dave/Documents/Voight_Lab/CHIP-Seq/Chip_Peaks/"
+tracker_file = base_file_path + "tracker.csv"
 HEADER = {'accept': 'application/json'}
 URL = "https://www.encodeproject.org"
-if not(os.path.exists("/Users/Dave/Documents/Voight_Lab/CHIP-Seq/Chip_Peaks/tracker.csv")):
-    with open("/Users/Dave/Documents/Voight_Lab/CHIP-Seq/Chip_Peaks/tracker.csv","w") as f:
+cell_type = ""
+target = "GATA3"
+
+if not(os.path.exists(tracker_file)):
+    with open(tracker_file,"w") as f:
         f.write("File Name,Target,Build,Biosample Term Name,Lab,Database,Replicate\n")
 
-with open("/Users/Dave/Documents/Voight_Lab/CHIP-Seq/Chip_Peaks/tracker.csv","a") as f:
-    response = requests.get(URL + "/search/?searchTerm=%s&type=Experiment&limit=all" % (sys.argv[1]),headers=HEADER)
+with open(tracker_file,"a") as f:
+    response = requests.get(URL + "/search/?searchTerm=%s&type=Experiment&limit=all" % (target),headers=HEADER)
     response_json_dict = response.json()
-    potential_locations = [object for object in response_json_dict["@graph"] if len(object["replicates"]) > 0 and object["replicates"][0]["library"]["biosample"]["organism"]["scientific_name"] == "Homo sapiens" and object["biosample_term_name"].lower() == "SK-N-SH".lower()]#"Gm12878".lower()]#"K562".lower()]
+    if cell_type != "":
+        potential_locations = [object for object in response_json_dict["@graph"] if len(object["replicates"]) > 0 and object["replicates"][0]["library"]["biosample"]["organism"]["scientific_name"] == "Homo sapiens" and object["biosample_term_name"].lower() == cell_type.lower()]
+    else:
+        potential_locations = [object for object in response_json_dict["@graph"] if len(object["replicates"]) > 0 and object["replicates"][0]["library"]["biosample"]["organism"]["scientific_name"] == "Homo sapiens"]
+
     if len(potential_locations) < 1:
         print "No results found"
+
     for location in tqdm.tqdm(potential_locations):
         location_response = requests.get(URL + location["@id"],headers=HEADER)
         location_response_dict = location_response.json()
@@ -52,7 +61,7 @@ with open("/Users/Dave/Documents/Voight_Lab/CHIP-Seq/Chip_Peaks/tracker.csv","a"
         for chip_file in chip_files:
             print "\n%s\n" %(os.path.basename(chip_file["href"]))
             #urllib.urlretrieve(URL + chip_file["href"],"/Users/Dave/Documents/Voight_Lab/CHIP-Seq/Chip_Peaks/%s" % (os.path.basename(chip_file["href"])))
-            with open("/Users/Dave/Documents/Voight_Lab/CHIP-Seq/Chip_Peaks/" + os.path.basename(chip_file["href"]),"wb") as g:
+            with open(base_file_path + os.path.basename(chip_file["href"]),"wb") as g:
                 sys.stdout.write('\n')
                 chunk_read(urllib.urlopen(URL + chip_file["href"]),g,report_hook=chunk_report,)
             f.write("%s,%s,%s,%s,\"%s\",%s,%s\n" % (os.path.basename(chip_file["href"]),location["target"]["label"],chip_file["assembly"],location["biosample_term_name"],location["lab"]["title"],location["award"]["project"],"" if len(chip_file["biological_replicates"]) == 0 else chip_file["biological_replicates"][0]))
